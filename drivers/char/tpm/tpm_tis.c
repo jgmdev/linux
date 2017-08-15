@@ -50,8 +50,33 @@ static inline struct tpm_tis_tcg_phy *to_tpm_tis_tcg_phy(struct tpm_tis_data *da
 	return container_of(data, struct tpm_tis_tcg_phy, priv);
 }
 
-static int interrupts = -1;
-module_param(interrupts, int, 0444);
+#ifdef CONFIG_PREEMPT_RT
+/*
+ * Flushes previous write operations to chip so that a subsequent
+ * ioread*()s won't stall a cpu.
+ */
+static inline void tpm_tis_flush(void __iomem *iobase)
+{
+	ioread8(iobase + TPM_ACCESS(0));
+}
+#else
+#define tpm_tis_flush(iobase) do { } while (0)
+#endif
+
+static inline void tpm_tis_iowrite8(u8 b, void __iomem *iobase, u32 addr)
+{
+	iowrite8(b, iobase + addr);
+	tpm_tis_flush(iobase);
+}
+
+static inline void tpm_tis_iowrite32(u32 b, void __iomem *iobase, u32 addr)
+{
+	iowrite32(b, iobase + addr);
+	tpm_tis_flush(iobase);
+}
+
+static bool interrupts = true;
+module_param(interrupts, bool, 0444);
 MODULE_PARM_DESC(interrupts, "Enable interrupts");
 
 static bool itpm;
@@ -133,7 +158,7 @@ static int check_acpi_tpm2(struct device *dev)
 	 * table is mandatory
 	 */
 	st =
-	    acpi_get_table(ACPI_SIG_TPM2, 1, (struct acpi_table_header **)&tbl);
+			acpi_get_table(ACPI_SIG_TPM2, 1, (struct acpi_table_header **)&tbl);
 	if (ACPI_FAILURE(st) || tbl->header.length < sizeof(*tbl)) {
 		dev_err(dev, FW_BUG "failed to get TPM2 ACPI table\n");
 		return -EINVAL;
@@ -153,7 +178,7 @@ static int check_acpi_tpm2(struct device *dev)
 #endif
 
 static int tpm_tcg_read_bytes(struct tpm_tis_data *data, u32 addr, u16 len,
-			      u8 *result)
+						u8 *result)
 {
 	struct tpm_tis_tcg_phy *phy = to_tpm_tis_tcg_phy(data);
 
@@ -164,12 +189,12 @@ static int tpm_tcg_read_bytes(struct tpm_tis_data *data, u32 addr, u16 len,
 }
 
 static int tpm_tcg_write_bytes(struct tpm_tis_data *data, u32 addr, u16 len,
-			       const u8 *value)
+						 const u8 *value)
 {
 	struct tpm_tis_tcg_phy *phy = to_tpm_tis_tcg_phy(data);
 
 	while (len--)
-		iowrite8(*value++, phy->iobase + addr);
+		tpm_tis_iowrite8(*value++, phy->iobase, addr);
 
 	return 0;
 }
@@ -196,7 +221,7 @@ static int tpm_tcg_write32(struct tpm_tis_data *data, u32 addr, u32 value)
 {
 	struct tpm_tis_tcg_phy *phy = to_tpm_tis_tcg_phy(data);
 
-	iowrite32(value, phy->iobase + addr);
+	tpm_tis_iowrite32(value, phy->iobase, addr);
 
 	return 0;
 }
@@ -242,7 +267,7 @@ static int tpm_tis_init(struct device *dev, struct tpm_info *tpm_info)
 static SIMPLE_DEV_PM_OPS(tpm_tis_pm, tpm_pm_suspend, tpm_tis_resume);
 
 static int tpm_tis_pnp_init(struct pnp_dev *pnp_dev,
-			    const struct pnp_device_id *pnp_id)
+					const struct pnp_device_id *pnp_id)
 {
 	struct tpm_info tpm_info = {};
 	struct resource *res;
@@ -301,7 +326,7 @@ static struct pnp_driver tis_pnp_driver = {
 
 #define TIS_HID_USR_IDX (ARRAY_SIZE(tpm_pnp_tbl) - 2)
 module_param_string(hid, tpm_pnp_tbl[TIS_HID_USR_IDX].id,
-		    sizeof(tpm_pnp_tbl[TIS_HID_USR_IDX].id), 0444);
+				sizeof(tpm_pnp_tbl[TIS_HID_USR_IDX].id), 0444);
 MODULE_PARM_DESC(hid, "Set additional specific HID for this driver to probe");
 
 static struct platform_device *force_pdev;
@@ -378,7 +403,7 @@ static int tpm_tis_force_device(void)
 	 * tpm_tis_plat_probe
 	 */
 	pdev = platform_device_register_simple("tpm_tis", -1, x86_resources,
-					       ARRAY_SIZE(x86_resources));
+								 ARRAY_SIZE(x86_resources));
 	if (IS_ERR(pdev))
 		return PTR_ERR(pdev);
 	force_pdev = pdev;
