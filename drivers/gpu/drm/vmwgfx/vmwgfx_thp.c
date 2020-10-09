@@ -101,7 +101,7 @@ found_unlock:
 		mem->start = node->start;
 	}
 
-	return 0;
+	return ret;
 }
 
 

@@ -1018,6 +1018,7 @@ static int amdgpu_ttm_tt_pin_userptr(struct ttm_bo_device *bdev,
 
 release_sg:
 	kfree(ttm->sg);
+	ttm->sg = NULL;
 	return r;
 }
 
