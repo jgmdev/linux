@@ -80,7 +80,6 @@ struct qxl_bo {
 	struct ttm_place		placements[3];
 	struct ttm_placement		placement;
 	struct ttm_bo_kmap_obj		kmap;
-	unsigned int pin_count;
 	void				*kptr;
 	unsigned int                    map_count;
 	int                             type;
@@ -350,7 +349,7 @@ int qxl_mode_dumb_mmap(struct drm_file *filp,
 int qxl_ttm_init(struct qxl_device *qdev);
 void qxl_ttm_fini(struct qxl_device *qdev);
 int qxl_ttm_io_mem_reserve(struct ttm_bo_device *bdev,
-			   struct ttm_mem_reg *mem);
+			   struct ttm_resource *mem);
 
 /* qxl image */
 

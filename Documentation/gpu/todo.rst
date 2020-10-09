@@ -149,7 +149,7 @@ have to keep track of that lock and either call ``unreference`` or
 ``unreference_locked`` depending upon context.
 
 Core GEM doesn't have a need for ``struct_mutex`` any more since kernel 4.8,
-and there's a ``gem_free_object_unlocked`` callback for any drivers which are
+and there's a GEM object ``free`` callback for any drivers which are
 entirely ``struct_mutex`` free.
 
 For drivers that need ``struct_mutex`` it should be replaced with a driver-
@@ -289,11 +289,8 @@ struct drm_gem_object_funcs
 ---------------------------
 
 GEM objects can now have a function table instead of having the callbacks on the
-DRM driver struct. This is now the preferred way and drivers can be moved over.
-
-We also need a 2nd version of the CMA define that doesn't require the
-vmapping to be present (different hook for prime importing). Plus this needs to
-be rolled out to all drivers using their own implementations, too.
+DRM driver struct. This is now the preferred way. Callbacks in drivers have been
+converted, except for struct drm_driver.gem_prime_mmap.
 
 Level: Intermediate
 
@@ -403,6 +400,52 @@ Contact: Emil Velikov, respective driver maintainers
 
 Level: Intermediate
 
+Plumb drm_atomic_state all over
+-------------------------------
+
+Currently various atomic functions take just a single or a handful of
+object states (eg. plane state). While that single object state can
+suffice for some simple cases, we often have to dig out additional
+object states for dealing with various dependencies between the individual
+objects or the hardware they represent. The process of digging out the
+additional states is rather non-intuitive and error prone.
+
+To fix that most functions should rather take the overall
+drm_atomic_state as one of their parameters. The other parameters
+would generally be the object(s) we mainly want to interact with.
+
+For example, instead of
+
+.. code-block:: c
+
+   int (*atomic_check)(struct drm_plane *plane, struct drm_plane_state *state);
+
+we would have something like
+
+.. code-block:: c
+
+   int (*atomic_check)(struct drm_plane *plane, struct drm_atomic_state *state);
+
+The implementation can then trivially gain access to any required object
+state(s) via drm_atomic_get_plane_state(), drm_atomic_get_new_plane_state(),
+drm_atomic_get_old_plane_state(), and their equivalents for
+other object types.
+
+Additionally many drivers currently access the object->state pointer
+directly in their commit functions. That is not going to work if we
+eg. want to allow deeper commit pipelines as those pointers could
+then point to the states corresponding to a future commit instead of
+the current commit we're trying to process. Also non-blocking commits
+execute locklessly so there are serious concerns with dereferencing
+the object->state pointers without holding the locks that protect them.
+Use of drm_atomic_get_new_plane_state(), drm_atomic_get_old_plane_state(),
+etc. avoids these problems as well since they relate to a specific
+commit via the passed in drm_atomic_state.
+
+Contact: Ville Syrjälä, Daniel Vetter
+
+Level: Intermediate
+
 
 Core refactorings
 =================
@@ -471,9 +514,6 @@ There's a bunch of issues with it:
   time. Drivers shouldn't need to worry about these technicalities, and fixing
   this (together with the drm_minor->drm_device move) would allow us to remove
   debugfs_init.
-
-- Drop the return code and error checking from all debugfs functions. Greg KH is
-  working on this already.
 
 Contact: Daniel Vetter
 
