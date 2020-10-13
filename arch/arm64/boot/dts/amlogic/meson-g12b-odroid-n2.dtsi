@@ -11,11 +11,8 @@
 
 / {
 	aliases {
-		ethernet0 = &ethmac;
-		i2c0 = &i2c2;
-		i2c1 = &i2c3;
 		serial0 = &uart_AO;
-		serial1 = &uart_A;
+		ethernet0 = &ethmac;
 	};
 
 	dioo2133: audio-amplifier-0 {
@@ -446,51 +443,6 @@
 };
 
 &gpio {
-	gpio-line-names =
-		/* GPIOZ */
-		"", "", "", "", "", "", "", "",
-		"", "", "", "", "", "", "", "",
-		/* GPIOH */
-		"", "", "", "", "", "", "", "",
-		"",
-		/* BOOT */
-		"", "", "", "", "", "", "", "",
-		"", "", "", "", "", "", "", "",
-		/* GPIOC */
-		"", "", "", "", "", "", "", "",
-		/* GPIOA */
-		"PIN_44", /* GPIOA_0 */
-		"PIN_46", /* GPIOA_1 */
-		"PIN_45", /* GPIOA_2 */
-		"PIN_47", /* GPIOA_3 */
-		"PIN_26", /* GPIOA_4 */
-		"", "", "", "", "", "",
-		"PIN_42", /* GPIOA_11 */
-		"PIN_32", /* GPIOA_12 */
-		"PIN_7",  /* GPIOA_13 */
-		"PIN_27", /* GPIOA_14 */
-		"PIN_28", /* GPIOA_15 */
-		/* GPIOX */
-		"PIN_16", /* GPIOX_0 */
-		"PIN_18", /* GPIOX_1 */
-		"PIN_22", /* GPIOX_2 */
-		"PIN_11", /* GPIOX_3 */
-		"PIN_13", /* GPIOX_4 */
-		"PIN_33", /* GPIOX_5 */
-		"PIN_35", /* GPIOX_6 */
-		"PIN_15", /* GPIOX_7 */
-		"PIN_19", /* GPIOX_8 */
-		"PIN_21", /* GPIOX_9 */
-		"PIN_24", /* GPIOX_10 */
-		"PIN_23", /* GPIOX_11 */
-		"PIN_8",  /* GPIOX_12 */
-		"PIN_10", /* GPIOX_13 */
-		"PIN_29", /* GPIOX_14 */
-		"PIN_31", /* GPIOX_15 */
-		"PIN_12", /* GPIOX_16 */
-		"PIN_3",  /* GPIOX_17 */
-		"PIN_5",  /* GPIOX_18 */
-		"PIN_36"; /* GPIOX_19 */
 	/*
 	 * WARNING: The USB Hub on the Odroid-N2 needs a reset signal
 	 * to be turned high in order to be detected by the USB Controller
@@ -518,35 +470,6 @@
 	};
 };
 
-&i2c2 {
-	status = "okay";
-
-	/*
-	 * 40 Pin Header : SDA(GPIOX.17->3 Pin)
-	 *		   SCL(GPIOX.18->5 Pin)
-	 */
-	pinctrl-names = "default";
-	pinctrl-0 = <&i2c2_master_pins1>;
-
-	/* default 400k */
-	clock-frequency = <400000>;
-};
-
-&i2c3 {
-	/* default i2c clock-frequency is 100Khz */
-	status = "okay";
-
-	/*
-	 * 40 Pin Header : SDA(GPIOA.14->27 Pin)
-	 *		   SCL(GPIOA.15->28 Pin)
-	 */
-	pinctrl-names = "default";
-	pinctrl-0 = <&i2c3_master_pins2>;
-
-	/* default 100k */
-	clock-frequency = <100000>;
-};
-
 &ir {
 	status = "okay";
 	pinctrl-0 = <&remote_input_ao_pins>;
@@ -570,10 +493,6 @@
 	status = "okay";
 };
 
-&saradc {
-	status = "okay";
-};
-
 /* SD card */
 &sd_emmc_b {
 	status = "okay";
@@ -583,11 +502,7 @@
 
 	bus-width = <4>;
 	cap-sd-highspeed;
-	max-frequency = <200000000>;
-	sd-uhs-sdr12;
-	sd-uhs-sdr25;
-	sd-uhs-sdr50;
-	sd-uhs-sdr104;
+	max-frequency = <50000000>;
 	disable-wp;
 
 	cd-gpios = <&gpio GPIOC_6 GPIO_ACTIVE_LOW>;
@@ -686,12 +601,6 @@
 
 &toddr_c {
 	status = "okay";
-};
-
-&uart_A {
-	status = "okay";
-	pinctrl-names = "default";
-	pinctrl-0 = <&uart_a_pins>;
 };
 
 &uart_AO {
