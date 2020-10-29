@@ -17,6 +17,8 @@
 	aliases {
 		serial0 = &uart_AO;
 		ethernet0 = &ethmac;
+		rtc0 = &rtc0;
+		rtc1 = &vrtc;
 	};
 
 	chosen {
@@ -404,6 +406,38 @@
 	pinctrl-0 = <&remote_input_ao_pins>;
 	pinctrl-names = "default";
 	linux,rc-map-name = "rc-odroid";
+};
+
+&i2c2 {
+	status = "okay";
+	pinctrl-0 = <&i2c2_master_pins1>;
+	pinctrl-names = "default";
+
+	rtc0: @51 {
+		status = "okay";
+		compatible = "nxp,pcf8563";
+		reg = <0x51>;
+	};
+};
+
+&periphs_pinctrl {
+	i2c2_master_pins1: i2c2-master-pins1 {
+		mux {
+			groups = "i2c2_sda_x", "i2c2_sck_x";
+			function = "i2c2";
+			bias-pull-up;
+			drive-strength-microamp = <3000>;
+		};
+	};
+
+	i2c3_master_pins2: i2c3-master-pins2 {
+		mux {
+			groups = "i2c3_sda_a", "i2c3_sck_a";
+			function = "i2c3";
+			bias-pull-up;
+			drive-strength-microamp = <3000>;
+		};
+	};
 };
 
 &pwm_AO_cd {
