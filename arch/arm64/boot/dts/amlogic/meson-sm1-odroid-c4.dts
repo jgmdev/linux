@@ -15,10 +15,11 @@
 	model = "Hardkernel ODROID-C4";
 
 	aliases {
-		serial0 = &uart_AO;
 		ethernet0 = &ethmac;
 		rtc0 = &rtc0;
 		rtc1 = &vrtc;
+		serial0 = &uart_AO;
+		serial1 = &uart_A;
 	};
 
 	chosen {
@@ -201,12 +202,12 @@
 				"TDM_B Playback", "TDMOUT_B OUT";
 
 		assigned-clocks = <&clkc CLKID_MPLL2>,
-				  <&clkc CLKID_MPLL0>,
-				  <&clkc CLKID_MPLL1>;
+					<&clkc CLKID_MPLL0>,
+					<&clkc CLKID_MPLL1>;
 		assigned-clock-parents = <0>, <0>, <0>;
 		assigned-clock-rates = <294912000>,
-				       <270950400>,
-				       <393216000>;
+							 <270950400>,
+							 <393216000>;
 		status = "okay";
 
 		dai-link-0 {
@@ -506,6 +507,12 @@
 
 &tohdmitx {
 	status = "okay";
+};
+
+&uart_A {
+	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart_a_pins>;
 };
 
 &uart_AO {
