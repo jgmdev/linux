@@ -19,6 +19,8 @@
 		ethernet0 = &ethmac;
 		rtc0 = &rtc0;
 		rtc1 = &vrtc;
+		i2c0 = &i2c2;
+		i2c1 = &i2c3;
 		serial0 = &uart_AO;
 		serial1 = &uart_A;
 		spi0 = &spicc0;
@@ -425,6 +427,24 @@
 		compatible = "nxp,pcf8563";
 		reg = <0x51>;
 	};
+
+	/* default 400k */
+	clock-frequency = <400000>;
+};
+
+&i2c3 {
+	/* default i2c clock-frequency is 100Khz */
+	status = "okay";
+
+	/*
+	 * 40 Pin Header : SDA(GPIOA.14->27 Pin)
+	 *			 SCL(GPIOA.15->28 Pin)
+	 */
+	pinctrl-names = "default";
+	pinctrl-0 = <&i2c3_master_pins2>;
+
+	/* default 100k */
+	clock-frequency = <100000>;
 };
 
 &periphs_pinctrl {
@@ -508,10 +528,10 @@
 
 	/*
 	 * 40 Pin Header : MOSI(GPIOX.8->19 Pin),
-	 *		   MISO(GPIOX.9->21 Pin),
-	 *		   SPI0_CLK(GPIOX.11->23 Pin)
-	 *		   SPI_CS0(GPIOX.10->24 Pin)
-	 *		   SPI_CS1(GPIOH.6->26 Pin)
+	 *			 MISO(GPIOX.9->21 Pin),
+	 *			 SPI0_CLK(GPIOX.11->23 Pin)
+	 *			 SPI_CS0(GPIOX.10->24 Pin)
+	 *			 SPI_CS1(GPIOH.6->26 Pin)
 	 */
 	pinctrl-names = "default","gpio_periphs";
 	pinctrl-0 = <&spicc0_x_pins>;
