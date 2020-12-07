@@ -110,6 +110,12 @@ config POWER_RESET_LINKSTATION
 
 	  Say Y here if you have a Buffalo LinkStation LS421D/E.
 
+config POWER_RESET_MESON
+	bool "Amlogic G12/SM1 reboot/power-off driver"
+	depends on ARCH_MESON
+	help
+	  This driver supports reboot and power off for Amlogic G12/SM1 SoCs
+
 config POWER_RESET_MSM
 	bool "Qualcomm MSM power-off driver"
 	depends on ARCH_QCOM
