@@ -13,6 +13,10 @@
 / {
 	compatible = "hardkernel,odroid-n2-plus", "amlogic,s922x", "amlogic,g12b";
 	model = "Hardkernel ODROID-N2Plus";
+
+	reboot {
+		sd-vqen = <&gpio_ao GPIOAO_3 GPIO_ACTIVE_HIGH>;
+	};
 };
 
 &vddcpu_a {
