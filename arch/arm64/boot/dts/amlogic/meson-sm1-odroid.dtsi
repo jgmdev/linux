@@ -28,6 +28,12 @@
 		reset-gpios = <&gpio BOOT_12 GPIO_ACTIVE_LOW>;
 	};
 
+	reboot {
+		sd-vqen = <&gpio_ao GPIOE_2 GPIO_ACTIVE_HIGH>;
+		sd-vqsw = <&gpio_ao GPIOAO_6 GPIO_ACTIVE_HIGH>;
+		sd-vmmc = <&gpio_ao GPIOAO_3 GPIO_ACTIVE_HIGH>;
+	};
+
 	leds {
 		compatible = "gpio-leds";
 
