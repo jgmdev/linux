@@ -182,6 +182,13 @@ enum z3fold_page_flags {
 };
 
 /*
+ * handle flags, go under HANDLE_FLAG_MASK
+ */
+enum z3fold_handle_flags {
+	HANDLES_NOFREE = 0,
+};
+
+/*
  * Forward declarations
  */
 static struct z3fold_header *__z3fold_alloc(struct z3fold_pool *, size_t, bool);
@@ -1412,19 +1419,16 @@ static int z3fold_reclaim_page(struct z3fold_pool *pool, unsigned int retries)
 			ret = pool->ops->evict(pool, middle_handle);
 			if (ret)
 				goto next;
-			free_handle(middle_handle, zhdr);
 		}
 		if (first_handle) {
 			ret = pool->ops->evict(pool, first_handle);
 			if (ret)
 				goto next;
-			free_handle(first_handle, zhdr);
 		}
 		if (last_handle) {
 			ret = pool->ops->evict(pool, last_handle);
 			if (ret)
 				goto next;
-			free_handle(last_handle, zhdr);
 		}
 next:
 		if (test_bit(PAGE_HEADLESS, &page->private)) {
