@@ -182,13 +182,6 @@ enum z3fold_page_flags {
 };
 
 /*
- * handle flags, go under HANDLE_FLAG_MASK
- */
-enum z3fold_handle_flags {
-	HANDLES_NOFREE = 0,
-};
-
-/*
  * Forward declarations
  */
 static struct z3fold_header *__z3fold_alloc(struct z3fold_pool *, size_t, bool);
@@ -318,11 +311,6 @@ static inline void free_handle(unsigned long handle, struct z3fold_header *zhdr)
 	slots = handle_to_slots(handle);
 	write_lock(&slots->lock);
 	*(unsigned long *)handle = 0;
-
-	if (test_bit(HANDLES_NOFREE, &slots->pool)) {
-		write_unlock(&slots->lock);
-		return; /* simple case, nothing else to do */
-	}
 
 	if (zhdr->slots != slots)
 		zhdr->foreign_handles--;
@@ -560,7 +548,7 @@ static void release_z3fold_page_locked(struct kref *ref)
 static void release_z3fold_page_locked_list(struct kref *ref)
 {
 	struct z3fold_header *zhdr = container_of(ref, struct z3fold_header,
-					       refcount);
+								 refcount);
 	struct z3fold_pool *pool = zhdr_to_pool(zhdr);
 
 	spin_lock(&pool->lock);
@@ -640,7 +628,7 @@ static inline enum buddy get_free_buddy(struct z3fold_header *zhdr, int chunks)
 
 	if (zhdr->middle_chunks) {
 		if (!zhdr->first_chunks &&
-		    chunks <= zhdr->start_middle - ZHDR_CHUNKS)
+				chunks <= zhdr->start_middle - ZHDR_CHUNKS)
 			bud = FIRST;
 		else if (!zhdr->last_chunks)
 			bud = LAST;
@@ -661,8 +649,8 @@ static inline void *mchunk_memmove(struct z3fold_header *zhdr,
 {
 	void *beg = zhdr;
 	return memmove(beg + (dst_chunk << CHUNK_SHIFT),
-		       beg + (zhdr->start_middle << CHUNK_SHIFT),
-		       zhdr->middle_chunks << CHUNK_SHIFT);
+					 beg + (zhdr->start_middle << CHUNK_SHIFT),
+					 zhdr->middle_chunks << CHUNK_SHIFT);
 }
 
 static inline bool buddy_single(struct z3fold_header *zhdr)
@@ -797,13 +785,13 @@ static int z3fold_compact_page(struct z3fold_header *zhdr)
 	 * there's substantial gain (at least BIG_CHUNK_GAP chunks)
 	 */
 	if (zhdr->first_chunks != 0 && zhdr->last_chunks == 0 &&
-	    zhdr->start_middle - (zhdr->first_chunks + ZHDR_CHUNKS) >=
+			zhdr->start_middle - (zhdr->first_chunks + ZHDR_CHUNKS) >=
 			BIG_CHUNK_GAP) {
 		mchunk_memmove(zhdr, zhdr->first_chunks + ZHDR_CHUNKS);
 		zhdr->start_middle = zhdr->first_chunks + ZHDR_CHUNKS;
 		return 1;
 	} else if (zhdr->last_chunks != 0 && zhdr->first_chunks == 0 &&
-		   TOTAL_CHUNKS - (zhdr->last_chunks + zhdr->start_middle
+			 TOTAL_CHUNKS - (zhdr->last_chunks + zhdr->start_middle
 					+ zhdr->middle_chunks) >=
 			BIG_CHUNK_GAP) {
 		unsigned short new_start = TOTAL_CHUNKS - zhdr->last_chunks -
@@ -840,13 +828,13 @@ static void do_compact_page(struct z3fold_header *zhdr, bool locked)
 	}
 
 	if (test_bit(PAGE_STALE, &page->private) ||
-	    test_and_set_bit(PAGE_CLAIMED, &page->private)) {
+			test_and_set_bit(PAGE_CLAIMED, &page->private)) {
 		z3fold_page_unlock(zhdr);
 		return;
 	}
 
 	if (!zhdr->foreign_handles && buddy_single(zhdr) &&
-	    zhdr->mapped_count == 0 && compact_single_buddy(zhdr)) {
+			zhdr->mapped_count == 0 && compact_single_buddy(zhdr)) {
 		if (kref_put(&zhdr->refcount, release_z3fold_page_locked))
 			atomic64_dec(&pool->pages_nr);
 		else {
@@ -896,7 +884,7 @@ lookup:
 		l = &unbuddied[i];
 		if (unlikely(zhdr != list_first_entry(READ_ONCE(l),
 						struct z3fold_header, buddy)) ||
-		    !z3fold_page_trylock(zhdr)) {
+				!z3fold_page_trylock(zhdr)) {
 			spin_unlock(&pool->lock);
 			zhdr = NULL;
 			put_cpu_ptr(pool->unbuddied);
@@ -910,7 +898,7 @@ lookup:
 
 		page = virt_to_page(zhdr);
 		if (test_bit(NEEDS_COMPACTING, &page->private) ||
-		    test_bit(PAGE_CLAIMED, &page->private)) {
+				test_bit(PAGE_CLAIMED, &page->private)) {
 			z3fold_page_unlock(zhdr);
 			zhdr = NULL;
 			put_cpu_ptr(pool->unbuddied);
@@ -955,7 +943,7 @@ lookup:
 
 			page = virt_to_page(zhdr);
 			if (test_bit(NEEDS_COMPACTING, &page->private) ||
-			    test_bit(PAGE_CLAIMED, &page->private)) {
+					test_bit(PAGE_CLAIMED, &page->private)) {
 				z3fold_page_unlock(zhdr);
 				zhdr = NULL;
 				if (can_sleep)
@@ -1109,7 +1097,7 @@ retry:
 			bud = get_free_buddy(zhdr, chunks);
 			if (bud == HEADLESS) {
 				if (kref_put(&zhdr->refcount,
-					     release_z3fold_page_locked))
+							 release_z3fold_page_locked))
 					atomic64_dec(&pool->pages_nr);
 				else
 					z3fold_page_unlock(zhdr);
@@ -1370,7 +1358,7 @@ static int z3fold_reclaim_page(struct z3fold_pool *pool, unsigned int retries)
 			 * that bit in __z3fold_alloc wouldn't make sense
 			 */
 			if (zhdr->foreign_handles ||
-			    test_and_set_bit(PAGE_CLAIMED, &page->private)) {
+					test_and_set_bit(PAGE_CLAIMED, &page->private)) {
 				if (kref_put(&zhdr->refcount,
 						release_z3fold_page))
 					atomic64_dec(&pool->pages_nr);
@@ -1424,16 +1412,19 @@ static int z3fold_reclaim_page(struct z3fold_pool *pool, unsigned int retries)
 			ret = pool->ops->evict(pool, middle_handle);
 			if (ret)
 				goto next;
+			free_handle(middle_handle, zhdr);
 		}
 		if (first_handle) {
 			ret = pool->ops->evict(pool, first_handle);
 			if (ret)
 				goto next;
+			free_handle(first_handle, zhdr);
 		}
 		if (last_handle) {
 			ret = pool->ops->evict(pool, last_handle);
 			if (ret)
 				goto next;
+			free_handle(last_handle, zhdr);
 		}
 next:
 		if (test_bit(PAGE_HEADLESS, &page->private)) {
@@ -1573,7 +1564,7 @@ static bool z3fold_page_isolate(struct page *page, isolate_mode_t mode)
 	zhdr = page_address(page);
 	z3fold_page_lock(zhdr);
 	if (test_bit(NEEDS_COMPACTING, &page->private) ||
-	    test_bit(PAGE_STALE, &page->private))
+			test_bit(PAGE_STALE, &page->private))
 		goto out;
 
 	if (zhdr->mapped_count != 0 || zhdr->foreign_handles != 0)
@@ -1599,7 +1590,7 @@ out:
 }
 
 static int z3fold_page_migrate(struct address_space *mapping, struct page *newpage,
-			       struct page *page, enum migrate_mode mode)
+						 struct page *page, enum migrate_mode mode)
 {
 	struct z3fold_header *zhdr, *new_zhdr;
 	struct z3fold_pool *pool;
@@ -1710,8 +1701,8 @@ static const struct z3fold_ops z3fold_zpool_ops = {
 };
 
 static void *z3fold_zpool_create(const char *name, gfp_t gfp,
-			       const struct zpool_ops *zpool_ops,
-			       struct zpool *zpool)
+						 const struct zpool_ops *zpool_ops,
+						 struct zpool *zpool)
 {
 	struct z3fold_pool *pool;
 
