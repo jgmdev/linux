@@ -168,7 +168,7 @@ static int vp9_update_header(struct amvdec_core *core, struct vb2_buffer *buf)
 		if (!old_header) {
 			/* nothing */
 		} else if (old_header > fdata + 16 + framesize) {
-			dev_dbg(core->dev, "%s: data has gaps, setting to 0\n",
+			dev_info(core->dev, "%s: data has gaps, setting to 0\n",
 				__func__);
 			memset(fdata + 16 + framesize, 0,
 			       (old_header - fdata + 16 + framesize));
@@ -329,7 +329,7 @@ esparser_queue(struct amvdec_session *sess, struct vb2_v4l2_buffer *vbuf)
 	offset = esparser_get_offset(sess);
 
 	amvdec_add_ts(sess, vb->timestamp, vbuf->timecode, offset, vbuf->flags);
-	dev_dbg(core->dev, "esparser: ts = %llu pld_size = %u offset = %08X flags = %08X\n",
+	dev_info(core->dev, "esparser: ts = %llu pld_size = %u offset = %08X flags = %08X\n",
 		vb->timestamp, payload_size, offset, vbuf->flags);
 
 	vbuf->flags = 0;
