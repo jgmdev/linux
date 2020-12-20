@@ -258,7 +258,7 @@ void amvdec_remove_ts(struct amvdec_session *sess, u64 ts)
 			goto unlock;
 		}
 	}
-	dev_warn(sess->core->dev_dec,
+	dev_info(sess->core->dev_dec,
 		 "Couldn't remove buffer with timestamp %llu from list\n", ts);
 
 unlock:
