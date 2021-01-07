@@ -104,7 +104,7 @@ static struct dma_fence *panfrost_fence_create(struct panfrost_device *pfdev, in
 	fence->queue = js_num;
 	fence->seqno = ++js->queue[js_num].emit_seqno;
 	dma_fence_init(&fence->base, &panfrost_fence_ops, &js->job_lock,
-		       js->queue[js_num].fence_context, fence->seqno);
+					 js->queue[js_num].fence_context, fence->seqno);
 
 	return &fence->base;
 }
@@ -122,7 +122,7 @@ static int panfrost_job_get_slot(struct panfrost_job *job)
 #if 0
 	if (job->requirements & PANFROST_JD_REQ_ONLY_COMPUTE) {
 		if ((job->requirements & PANFROST_JD_REQ_CORE_GRP_MASK) &&
-		    (job->pfdev->features.nr_core_groups == 2))
+				(job->pfdev->features.nr_core_groups == 2))
 			return 2;
 		if (panfrost_has_hw_issue(job->pfdev, HW_ISSUE_8987))
 			return 2;
@@ -197,8 +197,8 @@ static void panfrost_job_hw_submit(struct panfrost_job *job, int js)
 }
 
 static void panfrost_acquire_object_fences(struct drm_gem_object **bos,
-					   int bo_count,
-					   struct dma_fence **implicit_fences)
+						 int bo_count,
+						 struct dma_fence **implicit_fences)
 {
 	int i;
 
@@ -207,8 +207,8 @@ static void panfrost_acquire_object_fences(struct drm_gem_object **bos,
 }
 
 static void panfrost_attach_object_fences(struct drm_gem_object **bos,
-					  int bo_count,
-					  struct dma_fence *fence)
+						int bo_count,
+						struct dma_fence *fence)
 {
 	int i;
 
@@ -227,7 +227,7 @@ int panfrost_job_push(struct panfrost_job *job)
 	mutex_lock(&pfdev->sched_lock);
 
 	ret = drm_gem_lock_reservations(job->bos, job->bo_count,
-					    &acquire_ctx);
+							&acquire_ctx);
 	if (ret) {
 		mutex_unlock(&pfdev->sched_lock);
 		return ret;
@@ -244,14 +244,14 @@ int panfrost_job_push(struct panfrost_job *job)
 	kref_get(&job->refcount); /* put by scheduler job completion */
 
 	panfrost_acquire_object_fences(job->bos, job->bo_count,
-				       job->implicit_fences);
+							 job->implicit_fences);
 
 	drm_sched_entity_push_job(&job->base, entity);
 
 	mutex_unlock(&pfdev->sched_lock);
 
 	panfrost_attach_object_fences(job->bos, job->bo_count,
-				      job->render_done_fence);
+							job->render_done_fence);
 
 unlock:
 	drm_gem_unlock_reservations(job->bos, job->bo_count, &acquire_ctx);
@@ -380,7 +380,7 @@ void panfrost_job_enable_interrupts(struct panfrost_device *pfdev)
 }
 
 static bool panfrost_scheduler_stop(struct panfrost_queue_state *queue,
-				    struct drm_sched_job *bad)
+						struct drm_sched_job *bad)
 {
 	enum panfrost_queue_status old_status;
 	bool stopped = false;
@@ -509,8 +509,8 @@ static irqreturn_t panfrost_job_irq_handler(int irq, void *data)
 			 * started if status == FAULT_PENDING.
 			 */
 			old_status = atomic_cmpxchg(&pfdev->js->queue[j].status,
-						    PANFROST_QUEUE_STATUS_STARTING,
-						    PANFROST_QUEUE_STATUS_FAULT_PENDING);
+								PANFROST_QUEUE_STATUS_STARTING,
+								PANFROST_QUEUE_STATUS_FAULT_PENDING);
 			if (old_status == PANFROST_QUEUE_STATUS_ACTIVE)
 				drm_sched_fault(&pfdev->js->queue[j].sched);
 		}
@@ -542,8 +542,8 @@ static irqreturn_t panfrost_job_irq_handler(int irq, void *data)
 static void panfrost_reset(struct work_struct *work)
 {
 	struct panfrost_device *pfdev = container_of(work,
-						     struct panfrost_device,
-						     reset.work);
+								 struct panfrost_device,
+								 reset.work);
 	unsigned long flags;
 	unsigned int i;
 	bool cookie;
@@ -610,7 +610,7 @@ int panfrost_job_init(struct panfrost_device *pfdev)
 		return -ENODEV;
 
 	ret = devm_request_irq(pfdev->dev, irq, panfrost_job_irq_handler,
-			       IRQF_SHARED, KBUILD_MODNAME "-job", pfdev);
+						 IRQF_SHARED, KBUILD_MODNAME "-job", pfdev);
 	if (ret) {
 		dev_err(pfdev->dev, "failed to request job irq");
 		return ret;
@@ -622,9 +622,9 @@ int panfrost_job_init(struct panfrost_device *pfdev)
 		js->queue[j].fence_context = dma_fence_context_alloc(1);
 
 		ret = drm_sched_init(&js->queue[j].sched,
-				     &panfrost_sched_ops,
-				     1, 0, msecs_to_jiffies(JOB_TIMEOUT_MS),
-				     "pan_js");
+						 &panfrost_sched_ops,
+						 1, 0, msecs_to_jiffies(JOB_TIMEOUT_MS),
+						 "pan_js");
 		if (ret) {
 			dev_err(pfdev->dev, "Failed to create scheduler: %d.", ret);
 			goto err_sched;
@@ -665,8 +665,8 @@ int panfrost_job_open(struct panfrost_file_priv *panfrost_priv)
 	for (i = 0; i < NUM_JOB_SLOTS; i++) {
 		sched = &js->queue[i].sched;
 		ret = drm_sched_entity_init(&panfrost_priv->sched_entity[i],
-					    DRM_SCHED_PRIORITY_NORMAL, &sched,
-					    1, NULL);
+							DRM_SCHED_PRIORITY_NORMAL, &sched,
+							1, NULL);
 		if (WARN_ON(ret))
 			return ret;
 	}
@@ -677,8 +677,9 @@ void panfrost_job_close(struct panfrost_file_priv *panfrost_priv)
 {
 	int i;
 
-	for (i = 0; i < NUM_JOB_SLOTS; i++)
+	for (i = 0; i < NUM_JOB_SLOTS; i++) {
 		drm_sched_entity_destroy(&panfrost_priv->sched_entity[i]);
+	}
 }
 
 int panfrost_job_is_idle(struct panfrost_device *pfdev)

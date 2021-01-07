@@ -84,7 +84,7 @@ static void lock_region(struct panfrost_device *pfdev, u32 as_nr,
 
 
 static int mmu_hw_do_operation_locked(struct panfrost_device *pfdev, int as_nr,
-				      u64 iova, size_t size, u32 op)
+							u64 iova, size_t size, u32 op)
 {
 	if (as_nr < 0)
 		return 0;
@@ -100,8 +100,8 @@ static int mmu_hw_do_operation_locked(struct panfrost_device *pfdev, int as_nr,
 }
 
 static int mmu_hw_do_operation(struct panfrost_device *pfdev,
-			       struct panfrost_mmu *mmu,
-			       u64 iova, size_t size, u32 op)
+						 struct panfrost_mmu *mmu,
+						 u64 iova, size_t size, u32 op)
 {
 	int ret;
 
@@ -233,8 +233,8 @@ static size_t get_pgsize(u64 addr, size_t size)
 }
 
 static void panfrost_mmu_flush_range(struct panfrost_device *pfdev,
-				     struct panfrost_mmu *mmu,
-				     u64 iova, size_t size)
+						 struct panfrost_mmu *mmu,
+						 u64 iova, size_t size)
 {
 	if (mmu->as < 0)
 		return;
@@ -249,7 +249,7 @@ static void panfrost_mmu_flush_range(struct panfrost_device *pfdev,
 }
 
 static int mmu_map_sg(struct panfrost_device *pfdev, struct panfrost_mmu *mmu,
-		      u64 iova, int prot, struct sg_table *sgt)
+					u64 iova, int prot, struct sg_table *sgt)
 {
 	unsigned int count;
 	struct scatterlist *sgl;
@@ -296,7 +296,7 @@ int panfrost_mmu_map(struct panfrost_gem_mapping *mapping)
 		return PTR_ERR(sgt);
 
 	mmu_map_sg(pfdev, mapping->mmu, mapping->mmnode.start << PAGE_SHIFT,
-		   prot, sgt);
+			 prot, sgt);
 	mapping->active = true;
 
 	return 0;
@@ -345,13 +345,13 @@ static void mmu_tlb_sync_context(void *cookie)
 }
 
 static void mmu_tlb_flush_walk(unsigned long iova, size_t size, size_t granule,
-			       void *cookie)
+						 void *cookie)
 {
 	mmu_tlb_sync_context(cookie);
 }
 
 static void mmu_tlb_flush_leaf(unsigned long iova, size_t size, size_t granule,
-			       void *cookie)
+						 void *cookie)
 {
 	mmu_tlb_sync_context(cookie);
 }
@@ -383,7 +383,7 @@ found_mmu:
 
 	drm_mm_for_each_node(node, &mmu->mm) {
 		if (offset >= node->start &&
-		    offset < (node->start + node->size)) {
+				offset < (node->start + node->size)) {
 			mapping = drm_mm_node_to_panfrost_mapping(node);
 
 			kref_get(&mapping->refcount);
@@ -400,7 +400,7 @@ out:
 #define NUM_FAULT_PAGES (SZ_2M / PAGE_SIZE)
 
 static int panfrost_mmu_map_fault_addr(struct panfrost_device *pfdev, int as,
-				       u64 addr)
+							 u64 addr)
 {
 	int ret, i;
 	struct panfrost_gem_mapping *bomapping;
@@ -432,7 +432,7 @@ static int panfrost_mmu_map_fault_addr(struct panfrost_device *pfdev, int as,
 
 	if (!bo->base.pages) {
 		bo->sgts = kvmalloc_array(bo->base.base.size / SZ_2M,
-				     sizeof(struct sg_table), GFP_KERNEL | __GFP_ZERO);
+						 sizeof(struct sg_table), GFP_KERNEL | __GFP_ZERO);
 		if (!bo->sgts) {
 			mutex_unlock(&bo->base.pages_lock);
 			ret = -ENOMEM;
@@ -440,7 +440,7 @@ static int panfrost_mmu_map_fault_addr(struct panfrost_device *pfdev, int as,
 		}
 
 		pages = kvmalloc_array(bo->base.base.size >> PAGE_SHIFT,
-				       sizeof(struct page *), GFP_KERNEL | __GFP_ZERO);
+							 sizeof(struct page *), GFP_KERNEL | __GFP_ZERO);
 		if (!pages) {
 			kvfree(bo->sgts);
 			bo->sgts = NULL;
@@ -478,7 +478,7 @@ static int panfrost_mmu_map_fault_addr(struct panfrost_device *pfdev, int as,
 		goto err_map;
 
 	mmu_map_sg(pfdev, bomapping->mmu, addr,
-		   IOMMU_WRITE | IOMMU_READ | IOMMU_NOEXEC, sgt);
+			 IOMMU_WRITE | IOMMU_READ | IOMMU_NOEXEC, sgt);
 
 	bomapping->active = true;
 
@@ -587,7 +587,7 @@ struct panfrost_mmu *panfrost_mmu_ctx_create(struct panfrost_device *pfdev)
 	};
 
 	mmu->pgtbl_ops = alloc_io_pgtable_ops(ARM_MALI_LPAE, &mmu->pgtbl_cfg,
-					      mmu);
+								mmu);
 	if (!mmu->pgtbl_ops) {
 		kfree(mmu);
 		return ERR_PTR(-EINVAL);
