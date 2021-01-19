@@ -3678,7 +3678,6 @@ function_test_events_call(unsigned long ip, unsigned long parent_ip,
 	struct trace_buffer *buffer;
 	struct ring_buffer_event *event;
 	struct ftrace_entry *entry;
-	unsigned long flags;
 	unsigned int trace_ctx;
 	long disabled;
 	int cpu;
@@ -3690,8 +3689,6 @@ function_test_events_call(unsigned long ip, unsigned long parent_ip,
 
 	if (disabled != 1)
 		goto out;
-
-	local_save_flags(flags);
 
 	event = trace_event_buffer_lock_reserve(&buffer, &event_trace_file,
 						TRACE_FN, sizeof(*entry),
