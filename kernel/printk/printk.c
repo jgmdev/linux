@@ -173,7 +173,7 @@ __setup("printk.devkmsg=", control_devkmsg);
 char devkmsg_log_str[DEVKMSG_STR_MAX_SIZE] = "ratelimit";
 
 int devkmsg_sysctl_set_loglvl(struct ctl_table *table, int write,
-			      void *buffer, size_t *lenp, loff_t *ppos)
+						void *buffer, size_t *lenp, loff_t *ppos)
 {
 	char old_str[DEVKMSG_STR_MAX_SIZE];
 	unsigned int old;
@@ -493,9 +493,9 @@ static void truncate_msg(u16 *text_len, u16 *trunc_msg_len)
 
 /* insert record into the buffer, discard old ones, update heads */
 static int log_store(u32 caller_id, int facility, int level,
-		     enum log_flags flags, u64 ts_nsec,
-		     const struct dev_printk_info *dev_info,
-		     const char *text, u16 text_len)
+				 enum log_flags flags, u64 ts_nsec,
+				 const struct dev_printk_info *dev_info,
+				 const char *text, u16 text_len)
 {
 	struct prb_reserved_entry e;
 	struct printk_record r;
@@ -548,7 +548,7 @@ static int syslog_action_restricted(int type)
 	 * for everybody.
 	 */
 	return type != SYSLOG_ACTION_READ_ALL &&
-	       type != SYSLOG_ACTION_SIZE_BUFFER;
+				 type != SYSLOG_ACTION_SIZE_BUFFER;
 }
 
 static int check_syslog_permissions(int type, int source)
@@ -569,8 +569,8 @@ static int check_syslog_permissions(int type, int source)
 		 */
 		if (capable(CAP_SYS_ADMIN)) {
 			pr_warn_once("%s (%d): Attempt to access syslog with "
-				     "CAP_SYS_ADMIN but no CAP_SYSLOG "
-				     "(deprecated).\n",
+						 "CAP_SYS_ADMIN but no CAP_SYSLOG "
+						 "(deprecated).\n",
 				 current->comm, task_pid_nr(current));
 			goto ok;
 		}
@@ -587,7 +587,7 @@ static void append_char(char **pp, char *e, char c)
 }
 
 static ssize_t info_print_ext_header(char *buf, size_t size,
-				     struct printk_info *info)
+						 struct printk_info *info)
 {
 	u64 ts_usec = info->ts_nsec;
 	char caller[20];
@@ -645,8 +645,8 @@ static ssize_t msg_add_dict_text(char *buf, size_t size,
 }
 
 static ssize_t msg_print_ext_body(char *buf, size_t size,
-				  char *text, size_t text_len,
-				  struct dev_printk_info *dev_info)
+					char *text, size_t text_len,
+					struct dev_printk_info *dev_info)
 {
 	ssize_t len;
 
@@ -752,7 +752,7 @@ static ssize_t devkmsg_write(struct kiocb *iocb, struct iov_iter *from)
 }
 
 static ssize_t devkmsg_read(struct file *file, char __user *buf,
-			    size_t count, loff_t *ppos)
+					size_t count, loff_t *ppos)
 {
 	struct devkmsg_user *user = file->private_data;
 	struct printk_record *r = &user->record;
@@ -792,8 +792,8 @@ static ssize_t devkmsg_read(struct file *file, char __user *buf,
 
 	len = info_print_ext_header(user->buf, sizeof(user->buf), r->info);
 	len += msg_print_ext_body(user->buf + len, sizeof(user->buf) - len,
-				  &r->text_buf[0], r->info->text_len,
-				  &r->info->dev_info);
+					&r->text_buf[0], r->info->text_len,
+					&r->info->dev_info);
 
 	user->seq = r->info->seq + 1;
 	logbuf_unlock_irq();
@@ -890,7 +890,7 @@ static int devkmsg_open(struct inode *inode, struct file *file)
 	/* write-only does not need any file context */
 	if ((file->f_flags & O_ACCMODE) != O_WRONLY) {
 		err = check_syslog_permissions(SYSLOG_ACTION_READ_ALL,
-					       SYSLOG_FROM_READER);
+								 SYSLOG_FROM_READER);
 		if (err)
 			return err;
 	}
@@ -1079,7 +1079,7 @@ static void __init set_percpu_data_ready(void)
 }
 
 static unsigned int __init add_to_rb(struct printk_ringbuffer *rb,
-				     struct printk_record *r)
+						 struct printk_record *r)
 {
 	struct prb_reserved_entry e;
 	struct printk_record dest_r;
@@ -1145,7 +1145,7 @@ void __init setup_log_buf(int early)
 	new_log_buf = memblock_alloc(new_log_buf_len, LOG_ALIGN);
 	if (unlikely(!new_log_buf)) {
 		pr_err("log_buf_len: %lu text bytes not available\n",
-		       new_log_buf_len);
+					 new_log_buf_len);
 		return;
 	}
 
@@ -1153,7 +1153,7 @@ void __init setup_log_buf(int early)
 	new_descs = memblock_alloc(new_descs_size, LOG_ALIGN);
 	if (unlikely(!new_descs)) {
 		pr_err("log_buf_len: %zu desc bytes not available\n",
-		       new_descs_size);
+					 new_descs_size);
 		goto err_free_log_buf;
 	}
 
@@ -1161,7 +1161,7 @@ void __init setup_log_buf(int early)
 	new_infos = memblock_alloc(new_infos_size, LOG_ALIGN);
 	if (unlikely(!new_infos)) {
 		pr_err("log_buf_len: %zu info bytes not available\n",
-		       new_infos_size);
+					 new_infos_size);
 		goto err_free_descs;
 	}
 
@@ -1193,7 +1193,7 @@ void __init setup_log_buf(int early)
 
 	if (seq != prb_next_seq(&printk_rb_static)) {
 		pr_err("dropped %llu messages\n",
-		       prb_next_seq(&printk_rb_static) - seq);
+					 prb_next_seq(&printk_rb_static) - seq);
 	}
 
 	pr_info("log_buf_len: %u bytes\n", log_buf_len);
@@ -1295,7 +1295,7 @@ static size_t print_time(u64 ts, char *buf)
 	unsigned long rem_nsec = do_div(ts, 1000000000);
 
 	return sprintf(buf, "[%5lu.%06lu]",
-		       (unsigned long)ts, rem_nsec / 1000);
+					 (unsigned long)ts, rem_nsec / 1000);
 }
 
 #ifdef CONFIG_PRINTK_CALLER
@@ -1695,9 +1695,9 @@ int do_syslog(int type, char __user *buf, int len, int source)
 			u64 seq;
 
 			prb_for_each_info(syslog_seq, prb, seq, &info,
-					  &line_count) {
+						&line_count) {
 				error += get_record_print_text_size(&info, line_count,
-								    true, time);
+										true, time);
 				time = printk_time;
 			}
 			error -= syslog_partial;
@@ -1880,8 +1880,8 @@ static void call_console_drivers(const char *ext_text, size_t ext_len,
 
 	if (console_dropped) {
 		dropped_len = snprintf(dropped_text, sizeof(dropped_text),
-				       "** %lu printk messages dropped **\n",
-				       console_dropped);
+							 "** %lu printk messages dropped **\n",
+							 console_dropped);
 		console_dropped = 0;
 	}
 
@@ -1893,7 +1893,7 @@ static void call_console_drivers(const char *ext_text, size_t ext_len,
 		if (!con->write)
 			continue;
 		if (!cpu_online(smp_processor_id()) &&
-		    !(con->flags & CON_ANYTIME))
+				!(con->flags & CON_ANYTIME))
 			continue;
 		if (con->flags & CON_EXTENDED)
 			con->write(con, ext_text, ext_len);
@@ -1956,8 +1956,8 @@ static size_t log_output(int facility, int level, enum log_flags lflags,
 
 /* Must be called under logbuf_lock. */
 int vprintk_store(int facility, int level,
-		  const struct dev_printk_info *dev_info,
-		  const char *fmt, va_list args)
+			const struct dev_printk_info *dev_info,
+			const char *fmt, va_list args)
 {
 	static char textbuf[LOG_LINE_MAX];
 	char *text = textbuf;
@@ -2005,8 +2005,8 @@ int vprintk_store(int facility, int level,
 }
 
 asmlinkage int vprintk_emit(int facility, int level,
-			    const struct dev_printk_info *dev_info,
-			    const char *fmt, va_list args)
+					const struct dev_printk_info *dev_info,
+					const char *fmt, va_list args)
 {
 	int printed_len;
 	bool in_sched = false;
@@ -2118,13 +2118,13 @@ static size_t record_print_text(const struct printk_record *r,
 	return 0;
 }
 static ssize_t info_print_ext_header(char *buf, size_t size,
-				     struct printk_info *info)
+						 struct printk_info *info)
 {
 	return 0;
 }
 static ssize_t msg_print_ext_body(char *buf, size_t size,
-				  char *text, size_t text_len,
-				  struct dev_printk_info *dev_info) { return 0; }
+					char *text, size_t text_len,
+					struct dev_printk_info *dev_info) { return 0; }
 static void console_lock_spinning_enable(void) { }
 static int console_lock_spinning_disable_and_check(void) { return 0; }
 static void call_console_drivers(const char *ext_text, size_t ext_len,
@@ -2154,7 +2154,7 @@ asmlinkage __visible void early_printk(const char *fmt, ...)
 #endif
 
 static int __add_preferred_console(char *name, int idx, char *options,
-				   char *brl_options, bool user_specified)
+					 char *brl_options, bool user_specified)
 {
 	struct console_cmdline *c;
 	int i;
@@ -2164,8 +2164,8 @@ static int __add_preferred_console(char *name, int idx, char *options,
 	 *	if we have a slot free.
 	 */
 	for (i = 0, c = console_cmdline;
-	     i < MAX_CMDLINECONSOLES && c->name[0];
-	     i++, c++) {
+			 i < MAX_CMDLINECONSOLES && c->name[0];
+			 i++, c++) {
 		if (strcmp(c->name, name) == 0 && c->index == idx) {
 			if (!brl_options)
 				preferred_console = i;
@@ -2481,7 +2481,7 @@ skip:
 
 		/* Output to all consoles once old messages replayed. */
 		if (unlikely(exclusive_console &&
-			     console_seq >= exclusive_console_stop_seq)) {
+					 console_seq >= exclusive_console_stop_seq)) {
 			exclusive_console = NULL;
 		}
 
@@ -2684,18 +2684,18 @@ static int try_enable_new_console(struct console *newcon, bool user_specified)
 	int i, err;
 
 	for (i = 0, c = console_cmdline;
-	     i < MAX_CMDLINECONSOLES && c->name[0];
-	     i++, c++) {
+			 i < MAX_CMDLINECONSOLES && c->name[0];
+			 i++, c++) {
 		if (c->user_specified != user_specified)
 			continue;
 		if (!newcon->match ||
-		    newcon->match(newcon, c->name, c->index, c->options) != 0) {
+				newcon->match(newcon, c->name, c->index, c->options) != 0) {
 			/* default matching */
 			BUILD_BUG_ON(sizeof(c->name) != sizeof(newcon->name));
 			if (strcmp(c->name, newcon->name) != 0)
 				continue;
 			if (newcon->index >= 0 &&
-			    newcon->index != c->index)
+					newcon->index != c->index)
 				continue;
 			if (newcon->index < 0)
 				newcon->index = c->index;
@@ -2704,7 +2704,7 @@ static int try_enable_new_console(struct console *newcon, bool user_specified)
 				return 0;
 
 			if (newcon->setup &&
-			    (err = newcon->setup(newcon, c->options)) != 0)
+					(err = newcon->setup(newcon, c->options)) != 0)
 				return err;
 		}
 		newcon->flags |= CON_ENABLED;
@@ -2786,7 +2786,7 @@ void register_console(struct console *newcon)
 		if (newcon->index < 0)
 			newcon->index = 0;
 		if (newcon->setup == NULL ||
-		    newcon->setup(newcon, NULL) == 0) {
+				newcon->setup(newcon, NULL) == 0) {
 			newcon->flags |= CON_ENABLED;
 			if (newcon->device) {
 				newcon->flags |= CON_CONSDEV;
@@ -2869,8 +2869,8 @@ void register_console(struct console *newcon)
 		(newcon->flags & CON_BOOT) ? "boot" : "" ,
 		newcon->name, newcon->index);
 	if (bcon &&
-	    ((newcon->flags & (CON_CONSDEV | CON_BOOT)) == CON_CONSDEV) &&
-	    !keep_bootcon) {
+			((newcon->flags & (CON_CONSDEV | CON_BOOT)) == CON_CONSDEV) &&
+			!keep_bootcon) {
 		/* We need to iterate through all boot consoles, to make
 		 * sure we print everything out, before we unregister them.
 		 */
@@ -2996,11 +2996,11 @@ static int __init printk_late_init(void)
 
 		/* Check addresses that might be used for enabled consoles. */
 		if (init_section_intersects(con, sizeof(*con)) ||
-		    init_section_contains(con->write, 0) ||
-		    init_section_contains(con->read, 0) ||
-		    init_section_contains(con->device, 0) ||
-		    init_section_contains(con->unblank, 0) ||
-		    init_section_contains(con->data, 0)) {
+				init_section_contains(con->write, 0) ||
+				init_section_contains(con->read, 0) ||
+				init_section_contains(con->device, 0) ||
+				init_section_contains(con->unblank, 0) ||
+				init_section_contains(con->data, 0)) {
 			/*
 			 * Please, consider moving the reported consoles out
 			 * of the init section.
@@ -3273,7 +3273,7 @@ void kmsg_dump(enum kmsg_dump_reason reason)
  * The function is similar to kmsg_dump_get_line(), but grabs no locks.
  */
 bool kmsg_dump_get_line_nolock(struct kmsg_dumper *dumper, bool syslog,
-			       char *line, size_t size, size_t *len)
+						 char *line, size_t size, size_t *len)
 {
 	struct printk_info info;
 	unsigned int line_count;
@@ -3297,7 +3297,7 @@ bool kmsg_dump_get_line_nolock(struct kmsg_dumper *dumper, bool syslog,
 			goto out;
 		}
 		l = get_record_print_text_size(&info, line_count, syslog,
-					       printk_time);
+								 printk_time);
 
 	}
 
@@ -3360,7 +3360,7 @@ EXPORT_SYMBOL_GPL(kmsg_dump_get_line);
  * read.
  */
 bool kmsg_dump_get_buffer(struct kmsg_dumper *dumper, bool syslog,
-			  char *buf, size_t size, size_t *len)
+				char *buf, size_t size, size_t *len_out)
 {
 	struct printk_info info;
 	unsigned int line_count;
@@ -3368,11 +3368,9 @@ bool kmsg_dump_get_buffer(struct kmsg_dumper *dumper, bool syslog,
 	unsigned long flags;
 	u64 seq;
 	u64 next_seq;
-	size_t l = 0;
+	size_t len = 0;
 	bool ret = false;
 	bool time = printk_time;
-
-	prb_rec_init_rd(&r, &info, buf, size);
 
 	if (!dumper->active || !buf || !size)
 		goto out;
@@ -3389,48 +3387,51 @@ bool kmsg_dump_get_buffer(struct kmsg_dumper *dumper, bool syslog,
 		goto out;
 	}
 
-	/* calculate length of entire buffer */
-	seq = dumper->cur_seq;
-	while (prb_read_valid_info(prb, seq, &info, &line_count)) {
-		if (r.info->seq >= dumper->next_seq)
+	/*
+	 * Find first record that fits, including all following records,
+	 * into the user-provided buffer for this dump.
+	 */
+
+	prb_for_each_info(dumper->cur_seq, prb, seq, &info, &line_count) {
+		if (info.seq >= dumper->next_seq)
 			break;
-		l += get_record_print_text_size(&info, line_count, syslog, time);
-		seq = r.info->seq + 1;
+		len += get_record_print_text_size(&info, line_count, true, time);
 	}
 
-	/* move first record forward until length fits into the buffer */
-	seq = dumper->cur_seq;
-	while (l >= size && prb_read_valid_info(prb, seq,
-						&info, &line_count)) {
-		if (r.info->seq >= dumper->next_seq)
+	/*
+	 * Move first record forward until length fits into the buffer. This
+	 * is a best effort attempt. If @dumper->next_seq is reached because
+	 * the ringbuffer is wrapping too fast, just start filling the buffer
+	 * from there.
+	 */
+	prb_for_each_info(dumper->cur_seq, prb, seq, &info, &line_count) {
+		if (len <= size || info.seq >= dumper->next_seq)
 			break;
-		l -= get_record_print_text_size(&info, line_count, syslog, time);
-		seq = r.info->seq + 1;
+		len -= get_record_print_text_size(&info, line_count, true, time);
 	}
 
-	/* last message in next interation */
+	/* Keep track of the last message for the next interation. */
 	next_seq = seq;
 
-	/* actually read text into the buffer now */
-	l = 0;
-	while (prb_read_valid(prb, seq, &r)) {
+	prb_rec_init_rd(&r, &info, buf, size);
+
+	len = 0;
+	prb_for_each_record(seq, prb, seq, &r) {
 		if (r.info->seq >= dumper->next_seq)
 			break;
 
-		l += record_print_text(&r, syslog, time);
+		len += record_print_text(&r, syslog, time);
 
-		/* adjust record to store to remaining buffer space */
-		prb_rec_init_rd(&r, &info, buf + l, size - l);
-
-		seq = r.info->seq + 1;
+		/* Adjust record to store to remaining buffer space. */
+		prb_rec_init_rd(&r, &info, buf + len, size - len);
 	}
 
 	dumper->next_seq = next_seq;
 	ret = true;
 	logbuf_unlock_irqrestore(flags);
 out:
-	if (len)
-		*len = l;
+	if (len_out)
+		*len_out = len;
 	return ret;
 }
 EXPORT_SYMBOL_GPL(kmsg_dump_get_buffer);
