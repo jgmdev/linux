@@ -50,6 +50,96 @@
 		};
 	};
 
+	tflash_vdd: regulator-tflash_vdd {
+		compatible = "regulator-fixed";
+
+		regulator-name = "TFLASH_VDD";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+
+		gpio = <&gpio_ao GPIOAO_3 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		regulator-always-on;
+	};
+
+	tf_io: gpio-regulator-tf_io {
+		compatible = "regulator-gpio";
+
+		regulator-name = "TF_IO";
+		regulator-min-microvolt = <1800000>;
+		regulator-max-microvolt = <3300000>;
+
+		gpios = <&gpio_ao GPIOAO_6 GPIO_ACTIVE_HIGH>;
+		gpios-states = <0>;
+
+		states = <3300000 0>,
+			 <1800000 1>;
+	};
+
+	flash_1v8: regulator-flash_1v8 {
+		compatible = "regulator-fixed";
+		regulator-name = "FLASH_1V8";
+		regulator-min-microvolt = <1800000>;
+		regulator-max-microvolt = <1800000>;
+		vin-supply = <&vcc_3v3>;
+		regulator-always-on;
+	};
+
+	main_12v: regulator-main_12v {
+		compatible = "regulator-fixed";
+		regulator-name = "12V";
+		regulator-min-microvolt = <12000000>;
+		regulator-max-microvolt = <12000000>;
+		regulator-always-on;
+	};
+
+	vcc_5v: regulator-vcc_5v {
+		compatible = "regulator-fixed";
+		regulator-name = "5V";
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+		regulator-always-on;
+		vin-supply = <&main_12v>;
+	};
+
+	vcc_1v8: regulator-vcc_1v8 {
+		compatible = "regulator-fixed";
+		regulator-name = "VCC_1V8";
+		regulator-min-microvolt = <1800000>;
+		regulator-max-microvolt = <1800000>;
+		vin-supply = <&vcc_3v3>;
+		regulator-always-on;
+	};
+
+	vcc_3v3: regulator-vcc_3v3 {
+		compatible = "regulator-fixed";
+		regulator-name = "VCC_3V3";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		vin-supply = <&vddao_3v3>;
+		regulator-always-on;
+		/* FIXME: actually controlled by VDDCPU_B_EN */
+	};
+
+	vddcpu: regulator-vddcpu {
+		/*
+		 * MP8756GD Regulator.
+		 */
+		compatible = "pwm-regulator";
+
+		regulator-name = "VDDCPU";
+		regulator-min-microvolt = <721000>;
+		regulator-max-microvolt = <1030000>;
+
+		vin-supply = <&main_12v>;
+
+		pwms = <&pwm_AO_cd 1 1250 0>;
+		pwm-dutycycle-range = <100 0>;
+
+		regulator-boot-on;
+		regulator-always-on;
+	};
+
 	hub_5v: regulator-hub_5v {
 		compatible = "regulator-fixed";
 		regulator-name = "HUB_5V";
@@ -298,7 +388,7 @@
 
 	/*
 	 * 40 Pin Header : SDA(GPIOX.17->3 Pin)
-	 *		   SCL(GPIOX.18->5 Pin)
+	 *			 SCL(GPIOX.18->5 Pin)
 	 */
 	pinctrl-names = "default";
 	pinctrl-0 = <&i2c2_master_pins1>;
@@ -313,7 +403,7 @@
 
 	/*
 	 * 40 Pin Header : SDA(GPIOA.14->27 Pin)
-	 *		   SCL(GPIOA.15->28 Pin)
+	 *			 SCL(GPIOA.15->28 Pin)
 	 */
 	pinctrl-names = "default";
 	pinctrl-0 = <&i2c3_master_pins2>;
@@ -405,10 +495,10 @@
 
 	/*
 	 * 40 Pin Header : MOSI(GPIOX.8->19 Pin),
-	 *		   MISO(GPIOX.9->21 Pin),
-	 *		   SPI0_CLK(GPIOX.11->23 Pin)
-	 *		   SPI_CS0(GPIOX.10->24 Pin)
-	 *		   SPI_CS1(GPIOH.6->26 Pin)
+	 *			 MISO(GPIOX.9->21 Pin),
+	 *			 SPI0_CLK(GPIOX.11->23 Pin)
+	 *			 SPI_CS0(GPIOX.10->24 Pin)
+	 *			 SPI_CS1(GPIOH.6->26 Pin)
 	 */
 	pinctrl-names = "default","gpio_periphs";
 	pinctrl-0 = <&spicc0_x_pins>;
